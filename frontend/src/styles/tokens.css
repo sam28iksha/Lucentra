@@ -1,0 +1,97 @@
+/* ============================================================
+   LUCENTRA DESIGN TOKENS — "Lucentra Warm"
+   Import this first in index.css
+   ============================================================ */
+
+/* ── Google Fonts ─────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,100..900;1,9..144,100..900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+:root {
+  /* ── Backgrounds ──────────────────────────────────────────── */
+  --bg: #F8EEE6;
+  --surface: #FFF8F2;
+  --surface-2: #F3E8DE;
+  --overlay: rgba(248, 238, 230, 0.85);
+
+  /* ── Borders ──────────────────────────────────────────────── */
+  --border: #E9D9CB;
+  --border-strong: #D4BFB0;
+
+  /* ── Text ─────────────────────────────────────────────────── */
+  --ink: #1B1411;
+  --ink-muted: #6B5A50;
+  --ink-faint: #9D8478;
+
+  /* ── Brand ────────────────────────────────────────────────── */
+  --brand: #FF8A33;           /* bear orange */
+  --brand-strong: #FF4D0A;    /* vermilion CTA */
+  --brand-subtle: rgba(255, 138, 51, 0.12);
+
+  /* ── Accents ──────────────────────────────────────────────── */
+  --leaf: #5BB450;            /* beanie green — matched */
+  --forest: #24493A;          /* deep green — card icon */
+  --berry: #7A1F4B;           /* burgundy — card icon */
+
+  /* ── Status ───────────────────────────────────────────────── */
+  --status-matched: #5BB450;
+  --status-warning: #F5A524;
+  --status-error: #D93025;
+  --status-info: #2F6FED;
+  --status-pending: #F5A524;
+  --status-mismatch: #D93025;
+
+  /* ── Shape ────────────────────────────────────────────────── */
+  --radius-card: 20px;
+  --radius-card-lg: 24px;
+  --radius-pill: 9999px;
+  --radius-sm: 8px;
+
+  /* ── Shadow ───────────────────────────────────────────────── */
+  --shadow-card: 0 1px 4px 0 rgba(27,20,17,0.06), 0 2px 12px 0 rgba(27,20,17,0.04);
+  --shadow-card-hover: 0 4px 24px 0 rgba(27,20,17,0.10);
+  --shadow-button: 0 2px 8px 0 rgba(255, 77, 10, 0.25);
+
+  /* ── Typography ───────────────────────────────────────────── */
+  --font-display: 'Fraunces', serif;
+  --font-body: 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* ── Transitions ──────────────────────────────────────────── */
+  --transition-fast: 150ms ease;
+  --transition-base: 250ms ease;
+  --transition-slow: 400ms ease;
+
+  /* ── Spacing scale (multiples of 4px) ────────────────────── */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-24: 96px;
+}
+
+/* ── Dark mode token overrides ────────────────────────────── */
+.dark {
+  --bg: #1A1410;
+  --surface: #231C17;
+  --surface-2: #2D2319;
+  --overlay: rgba(26, 20, 16, 0.90);
+  --border: #3D2E24;
+  --border-strong: #5A4035;
+  --ink: #F5E8DF;
+  --ink-muted: #A68D7C;
+  --ink-faint: #7A6358;
+  --brand-subtle: rgba(255, 138, 51, 0.18);
+}
+
+/* ── Reduced motion ───────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

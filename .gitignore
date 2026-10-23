@@ -1,0 +1,46 @@
+# Secrets — NEVER commit these
+backend/.env
+frontend/.env
+**/.env.local
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+.venv/
+venv/
+env/
+*.egg-info/
+dist/
+build/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+htmlcov/
+.coverage
+
+# Node
+node_modules/
+frontend/dist/
+frontend/.vite/
+
+# Media (large binary assets — add via LFS or place manually)
+*.mp4
+*.webm
+frontend/public/media/*.png
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/settings.json
+
+# Render / Docker
+.render-buildpacks.json
+
+# AG Grid / AG Studio license key — handled via env var only
+*.license

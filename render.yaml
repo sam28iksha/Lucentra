@@ -1,0 +1,43 @@
+services:
+  # ── Static frontend (Vite build) ─────────────────────────────────────────────
+  - type: web
+    name: lucentra-frontend
+    runtime: static
+    buildCommand: cd frontend && npm ci && npm run build
+    staticPublishPath: frontend/dist
+    pullRequestPreviewsEnabled: true
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+      - path: /index.html
+        name: Cache-Control
+        value: no-cache
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+
+  # ── FastAPI backend ───────────────────────────────────────────────────────────
+  - type: web
+    name: lucentra-backend
+    runtime: python
+    buildCommand: cd backend && pip install -e .
+    startCommand: cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: lucentra-db
+          property: connectionString
+      # Set the following in the Render dashboard (never commit values):
+      # PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_WEBHOOK_ID,
+      # AI_API_KEY, JWT_SECRET, CORS_ORIGINS, ENVIRONMENT=production,
+      # SANDBOX_MODE=true (for demo), AG_STUDIO_LICENSE_KEY (optional)
+
+  # ── Managed PostgreSQL 15 ─────────────────────────────────────────────────────
+databases:
+  - name: lucentra-db
+    plan: free
+    databaseName: lucentra
+    user: lucentra
