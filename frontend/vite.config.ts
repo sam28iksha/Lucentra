@@ -11,14 +11,14 @@ export default defineConfig({
     },
   },
   server: {
-    port: 5173,
+    port: 5174,
     proxy: {
       '/api': {
-        target: process.env.VITE_API_BASE_URL || 'http://localhost:8000',
+        target: process.env.VITE_API_BASE_URL || 'http://localhost:8001',
         changeOrigin: true,
       },
       '/webhooks': {
-        target: process.env.VITE_API_BASE_URL || 'http://localhost:8000',
+        target: process.env.VITE_API_BASE_URL || 'http://localhost:8001',
         changeOrigin: true,
       },
     },
@@ -28,8 +28,6 @@ export default defineConfig({
     sourcemap: false,
     rollupOptions: {
       output: {
-        // Ensure no secrets end up in bundles
-        // (they shouldn't — only VITE_* vars are inlined)
         manualChunks: {
           react: ['react', 'react-dom'],
           router: ['react-router-dom'],

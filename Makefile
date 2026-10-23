@@ -5,7 +5,7 @@ dev:
 	docker compose up
 
 dev-backend:
-	cd backend && uvicorn app.main:app --reload --port 8000
+	cd backend && uvicorn app.main:app --reload --port 8001
 
 dev-frontend:
 	cd frontend && npm run dev
