@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -11,13 +13,13 @@ router = APIRouter(prefix="/audit", tags=["audit"])
 
 
 @router.get("")
-async def list_events(db: AsyncSession = Depends(get_db)) -> dict:
+async def list_events(db: AsyncSession = Depends(get_db)) -> dict[str, Any]:
     # TODO T5.1
     return {"events": [], "total": 0}
 
 
 @router.get("/verify")
-async def verify_chain(db: AsyncSession = Depends(get_db)) -> dict:
+async def verify_chain(db: AsyncSession = Depends(get_db)) -> dict[str, Any]:
     """Recompute the full hash chain and report whether it is intact.
 
     Returns {valid: bool, broken_at: uuid | null, checked: int}

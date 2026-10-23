@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
+from typing import Any
 
 from sqlalchemy import DateTime, String
 from sqlalchemy.dialects.postgresql import JSONB, UUID
@@ -45,11 +46,11 @@ class Dispute(Base):
     paypal_transaction_id: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
 
     # ── Raw payload ─────────────────────────────────────────────────────────
-    raw_payload: Mapped[dict] = mapped_column(JSONB, nullable=False)
+    raw_payload: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False)
 
     # ── Evidence drafts (versioned, stored in JSONB array) ───────────────────
     # Each draft: {version, generated_at, draft: EvidenceDraft, approved: bool}
-    evidence_drafts: Mapped[list] = mapped_column(JSONB, nullable=False, default=list)
+    evidence_drafts: Mapped[list[dict[str, Any]]] = mapped_column(JSONB, nullable=False, default=list)
 
     # ── Timestamps ───────────────────────────────────────────────────────────
     created_at: Mapped[datetime] = mapped_column(

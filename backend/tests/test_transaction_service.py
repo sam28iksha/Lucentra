@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from typing import Any
 from unittest.mock import AsyncMock
 
 import pytest
@@ -16,7 +17,7 @@ def mock_session() -> AsyncMock:
 
 
 @pytest.fixture
-def sample_paypal_raw() -> dict:
+def sample_paypal_raw() -> dict[str, Any]:
     return {
         "transaction_info": {
             "transaction_id": "9XY82190KV829102X",
@@ -45,7 +46,7 @@ def sample_paypal_raw() -> dict:
 
 def test_normalize_record_extracts_correct_fields(
     mock_session: AsyncMock,
-    sample_paypal_raw: dict,
+    sample_paypal_raw: dict[str, Any],
 ) -> None:
     service = TransactionService(mock_session)
     norm = service._normalize_record(sample_paypal_raw, "test_job_123")
@@ -64,7 +65,7 @@ def test_normalize_record_extracts_correct_fields(
 
 def test_normalize_record_handles_missing_fee(
     mock_session: AsyncMock,
-    sample_paypal_raw: dict,
+    sample_paypal_raw: dict[str, Any],
 ) -> None:
     sample_paypal_raw["transaction_info"].pop("fee_amount", None)
     service = TransactionService(mock_session)

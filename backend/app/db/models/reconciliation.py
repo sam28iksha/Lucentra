@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
+from typing import Any
 
 from sqlalchemy import DateTime, Integer, String, Text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
@@ -62,4 +63,4 @@ class ReconResult(Base):
     )
 
     # ── Raw snapshot for audit ────────────────────────────────────────────────
-    snapshot: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
+    snapshot: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, default=dict)

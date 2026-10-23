@@ -60,6 +60,7 @@ ignore = ["E501", "B008"]     # line length and FastAPI Depends handled separate
 [tool.mypy]
 python_version = "3.12"
 strict = true
+explicit_package_bases = true
 ignore_missing_imports = true
 plugins = ["pydantic.mypy"]
 

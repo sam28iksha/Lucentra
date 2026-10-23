@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from fastapi import APIRouter, BackgroundTasks, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -11,13 +13,13 @@ router = APIRouter(prefix="/disputes", tags=["disputes"])
 
 
 @router.get("")
-async def list_disputes(db: AsyncSession = Depends(get_db)) -> dict:
+async def list_disputes(db: AsyncSession = Depends(get_db)) -> dict[str, Any]:
     # TODO T6.1
     return {"disputes": [], "total": 0}
 
 
 @router.get("/{dispute_id}")
-async def get_dispute(dispute_id: str, db: AsyncSession = Depends(get_db)) -> dict:
+async def get_dispute(dispute_id: str, db: AsyncSession = Depends(get_db)) -> dict[str, Any]:
     # TODO T6.1
     return {"dispute_id": dispute_id}
 

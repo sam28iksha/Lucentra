@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 from collections.abc import Sequence
 from datetime import datetime
+from typing import Any
 from uuid import UUID
 
 from sqlalchemy import desc, func, select
@@ -74,7 +75,7 @@ class TransactionRepository:
         transaction_subject: str | None,
         payer_email: str | None,
         payer_name: str | None,
-        raw_payload: dict,
+        raw_payload: dict[str, Any],
         sync_job_id: str | None = None,
     ) -> Transaction:
         """Upsert a transaction row based on the composite unique key.

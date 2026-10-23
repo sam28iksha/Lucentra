@@ -10,7 +10,7 @@ import asyncio
 import logging
 import time
 from datetime import UTC, datetime
-from typing import Any
+from typing import Any, cast
 
 import httpx
 
@@ -80,13 +80,14 @@ class PayPalClient:
                         status_code=response.status_code,
                     )
 
-                data = response.json()
-                token = data.get("access_token")
+                data = cast(dict[str, Any], response.json())
+                token_val = data.get("access_token")
                 expires_in = data.get("expires_in", 32400)  # default ~9h
 
-                if not token:
+                if not token_val:
                     raise PayPalAPIError("Malformed token response from PayPal", 502)
 
+                token = str(token_val)
                 self._access_token = token
                 self._token_expires_at = time.time() + float(expires_in)
                 logger.info("Successfully refreshed PayPal OAuth token (valid for %ss)", expires_in)
@@ -161,7 +162,7 @@ class PayPalClient:
                 if response.status_code == 204:
                     return {}
 
-                return response.json()
+                return cast(dict[str, Any], response.json())
 
         raise PayPalAPIError("Max retries exceeded for PayPal request", 504)
 
@@ -241,7 +242,7 @@ class PayPalClient:
 
         try:
             res = await self._request("POST", "/v1/notifications/verify-webhook-signature", json=payload)
-            status = res.get("verification_status", "").upper()
+            status = str(res.get("verification_status", "")).upper()
             return status == "SUCCESS"
         except PayPalAPIError as exc:
             logger.warning("PayPal webhook verification check returned error: %s", exc)

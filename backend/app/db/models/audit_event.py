@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
+from typing import Any
 
 from sqlalchemy import DateTime, String, Text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
@@ -42,15 +43,15 @@ class AuditEvent(Base):
     record_id: Mapped[str | None] = mapped_column(String(128), nullable=True, index=True)
 
     # ── Before / after ────────────────────────────────────────────────────────
-    before_state: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
-    after_state: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    before_state: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    after_state: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
 
     # ── Context ───────────────────────────────────────────────────────────────
     source: Mapped[str | None] = mapped_column(String(64), nullable=True)
     external_reference: Mapped[str | None] = mapped_column(String(256), nullable=True)
     outcome: Mapped[str | None] = mapped_column(String(64), nullable=True)
     override_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
-    metadata_: Mapped[dict] = mapped_column("metadata", JSONB, nullable=False, default=dict)
+    metadata_: Mapped[dict[str, Any]] = mapped_column("metadata", JSONB, nullable=False, default=dict)
 
     # ── Hash chain ────────────────────────────────────────────────────────────
     prev_hash: Mapped[str] = mapped_column(String(64), nullable=False)

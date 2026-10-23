@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -17,7 +19,7 @@ async def run_reconciliation(db: AsyncSession = Depends(get_db)) -> dict[str, st
 
 
 @router.get("/results")
-async def list_results(db: AsyncSession = Depends(get_db)) -> dict:
+async def list_results(db: AsyncSession = Depends(get_db)) -> dict[str, Any]:
     # TODO T4.3
     return {"results": [], "total": 0}
 

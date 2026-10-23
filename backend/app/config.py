@@ -65,4 +65,4 @@ class Settings(BaseSettings):
 
 
 # Single shared instance — import this, don't re-instantiate
-settings = Settings()  # type: ignore[call-arg]
+settings = Settings()

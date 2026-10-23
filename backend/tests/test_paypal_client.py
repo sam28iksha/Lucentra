@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import time
 from datetime import UTC, datetime
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -52,7 +53,8 @@ async def test_get_transactions_date_formatting(client: PayPalClient) -> None:
 
     mock_resp = MagicMock()
     mock_resp.status_code = 200
-    mock_resp.json.return_value = {"transaction_details": [], "total_pages": 1}
+    empty_details: list[dict[str, Any]] = []
+    mock_resp.json.return_value = {"transaction_details": empty_details, "total_pages": 1}
 
     with patch("httpx.AsyncClient.request", new_callable=AsyncMock, return_value=mock_resp) as mock_req:
         res = await client.get_transactions(start, end, page=1)

@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
+from typing import Any
 
 from sqlalchemy import DateTime, Integer, String, Text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB, UUID
@@ -58,7 +59,7 @@ class Transaction(Base):
     payer_name: Mapped[str | None] = mapped_column(String(256), nullable=True)
 
     # ── Raw payload ─────────────────────────────────────────────────────────
-    raw_payload: Mapped[dict] = mapped_column(JSONB, nullable=False)
+    raw_payload: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False)
 
     # ── Ingestion metadata ──────────────────────────────────────────────────
     ingested_at: Mapped[datetime] = mapped_column(
