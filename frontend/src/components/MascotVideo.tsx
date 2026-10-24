@@ -28,9 +28,8 @@ export default function MascotVideo({ className = '', width = '100%' }: MascotPr
       <img
         src={POSTER}
         alt="Lucentra mascot — friendly orange bear wearing a green beanie"
-        className="w-full h-full object-contain mascot-float drop-shadow-sm"
+        className="w-full h-full object-contain mascot-float"
         style={{
-          mixBlendMode: 'multiply',
           willChange: 'transform',
         }}
         loading="eager"
