@@ -15,34 +15,6 @@ import { Sparkles, ArrowRight, Shield, Zap, BarChart3 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import MascotVideo, { MascotPlaceholder } from '../components/MascotVideo'
 
-// ── Spark decoration around mascot ──────────────────────────
-function Sparks() {
-  const sparks = [
-    { top: '8%', left: '72%', rotate: '30deg', height: '28px' },
-    { top: '20%', left: '88%', rotate: '-15deg', height: '20px' },
-    { top: '55%', left: '90%', rotate: '60deg', height: '16px' },
-    { top: '75%', left: '80%', rotate: '-40deg', height: '24px' },
-    { top: '85%', left: '60%', rotate: '20deg', height: '18px' },
-    { top: '10%', left: '58%', rotate: '-25deg', height: '22px' },
-  ]
-  return (
-    <>
-      {sparks.map((s, i) => (
-        <span
-          key={i}
-          className="spark"
-          style={{
-            top: s.top,
-            left: s.left,
-            height: s.height,
-            transform: `rotate(${s.rotate})`,
-            animationDelay: `${i * 0.3}s`,
-          }}
-        />
-      ))}
-    </>
-  )
-}
 
 // ── Feature cards ─────────────────────────────────────────────
 const FEATURES = [
@@ -224,7 +196,6 @@ export default function Landing() {
             className="relative flex justify-center"
           >
             <div className="relative" style={{ width: 'min(100%, 420px)' }}>
-              <Sparks />
               <MascotVideo className="mascot-float" width="100%" />
             </div>
           </motion.div>

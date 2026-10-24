@@ -210,14 +210,4 @@
   @media (prefers-reduced-motion: reduce) {
     .mascot-float { animation: none; }
   }
-
-  /* ── Orange spark strokes ────────────────────────────────── */
-  .spark {
-    position: absolute;
-    width: 6px;
-    height: 20px;
-    background: var(--brand);
-    border-radius: var(--radius-pill);
-    opacity: 0.7;
-  }
 }
