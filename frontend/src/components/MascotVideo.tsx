@@ -2,12 +2,11 @@
  * MascotVideo — renders the brand mascot hero video with multiple fallbacks.
  *
  * Behavior:
- * - Plays webm first (smaller, AV1/VP9), falls back to mp4 (H.264)
- * - Pauses via IntersectionObserver when scrolled off-screen
- * - Pauses under prefers-reduced-motion, shows poster instead
- * - Falls back to poster image on load error
- * - If neither video nor poster is present, shows a visible orange
- *   placeholder with clear instructions (build never fails silently)
+ * - Direct MP4 playback with explicit DOM-level muting (bypasses browser autoplay blocks)
+ * - Auto-plays on mount and resumes via IntersectionObserver when visible
+ * - Pauses under prefers-reduced-motion, showing poster instead
+ * - Interactive click-to-play / click-to-toggle
+ * - Robust error handling without premature fallback swapping
  */
 
 import { useEffect, useRef, useState } from 'react'
@@ -21,8 +20,12 @@ interface MascotVideoProps {
 
 export default function MascotVideo({ className = '', width = '100%' }: MascotVideoProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
-  const [loadError, setLoadError] = useState(false)
+  const [hasFatalError, setHasFatalError] = useState(false)
   const [reducedMotion, setReducedMotion] = useState(false)
+  const [isPlaying, setIsPlaying] = useState(false)
+
+  const POSTER = '/media/mascot-poster.png'
+  const VIDEO_MP4 = '/media/mascot-hero.mp4'
 
   // Detect prefers-reduced-motion
   useEffect(() => {
@@ -33,24 +36,56 @@ export default function MascotVideo({ className = '', width = '100%' }: MascotVi
     return () => mq.removeEventListener('change', onChange)
   }, [])
 
-  // Pause/resume based on visibility (IntersectionObserver)
+  // Explicitly ensure DOM properties for autoplay compliance
   useEffect(() => {
     const video = videoRef.current
-    if (!video || reducedMotion) return
+    if (!video) return
 
+    // CRITICAL: Browsers block autoplay if DOM properties defaultMuted / muted are false
+    video.defaultMuted = true
+    video.muted = true
+
+    const attemptPlay = () => {
+      if (reducedMotion) return
+      const playPromise = video.play()
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => setIsPlaying(true))
+          .catch((err) => {
+            console.warn('Autoplay prevented or waiting for interaction:', err)
+            setIsPlaying(false)
+          })
+      }
+    }
+
+    // Play when video is ready
+    if (video.readyState >= 2) {
+      attemptPlay()
+    } else {
+      video.addEventListener('loadeddata', attemptPlay, { once: true })
+      video.addEventListener('canplay', attemptPlay, { once: true })
+    }
+
+    // IntersectionObserver to pause when scrolled off-screen and play when visible
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          video.play().catch(() => {/* autoplay blocked — poster will show */})
+          attemptPlay()
         } else {
           video.pause()
+          setIsPlaying(false)
         }
       },
-      { threshold: 0.1 },
+      { threshold: 0.15 },
     )
 
     observer.observe(video)
-    return () => observer.disconnect()
+
+    return () => {
+      observer.disconnect()
+      video.removeEventListener('loadeddata', attemptPlay)
+      video.removeEventListener('canplay', attemptPlay)
+    }
   }, [reducedMotion])
 
   // Pause video when reduced motion is preferred
@@ -59,32 +94,39 @@ export default function MascotVideo({ className = '', width = '100%' }: MascotVi
     if (!video) return
     if (reducedMotion) {
       video.pause()
+      setIsPlaying(false)
     }
   }, [reducedMotion])
 
-  const POSTER = '/media/mascot-poster.png'
-  const VIDEO_WEBM = '/media/mascot-hero.webm'
-  const VIDEO_MP4 = '/media/mascot-hero.mp4'
+  const togglePlayback = () => {
+    const video = videoRef.current
+    if (!video) return
+    if (video.paused) {
+      video.play().then(() => setIsPlaying(true)).catch(console.error)
+    } else {
+      video.pause()
+      setIsPlaying(false)
+    }
+  }
 
-  // Show poster only (reduced motion or load error after video attempt)
-  if (reducedMotion || loadError) {
+  // Show poster only under prefers-reduced-motion or true fatal video error
+  if (reducedMotion || hasFatalError) {
     return (
       <img
         src={POSTER}
         alt="Lucentra mascot — friendly orange bear with a green beanie"
         className={`mascot-float object-contain w-full ${className}`}
         style={{ width, aspectRatio: '1 / 1' }}
-        onError={() => {
-          // Poster also failed — show placeholder
-        }}
       />
     )
   }
 
   return (
     <div
-      className={`relative ${className}`}
+      className={`relative cursor-pointer select-none ${className}`}
       style={{ width, aspectRatio: '1 / 1' }}
+      onClick={togglePlayback}
+      title="Click to play / pause mascot video"
     >
       <video
         ref={videoRef}
@@ -92,15 +134,22 @@ export default function MascotVideo({ className = '', width = '100%' }: MascotVi
         muted
         loop
         playsInline
-        preload="metadata"
+        preload="auto"
         poster={POSTER}
         className="w-full h-full object-contain mascot-float"
         style={{ mixBlendMode: 'multiply' }}
-        onError={() => setLoadError(true)}
+        onPlay={() => setIsPlaying(true)}
+        onPause={() => setIsPlaying(false)}
+        onError={(e) => {
+          console.error('Video encountered an error:', e)
+          const vid = videoRef.current
+          if (vid?.error) {
+            console.error('Video error code:', vid.error.code, vid.error.message)
+            setHasFatalError(true)
+          }
+        }}
       >
-        <source src={VIDEO_WEBM} type="video/webm" />
         <source src={VIDEO_MP4} type="video/mp4" />
-        {/* Fallback for browsers that can't play the video */}
         <img
           src={POSTER}
           alt="Lucentra mascot — friendly orange bear with a green beanie"
@@ -108,21 +157,26 @@ export default function MascotVideo({ className = '', width = '100%' }: MascotVi
         />
       </video>
 
-      {/* Placeholder shown when video files are missing (dev helper) */}
-      <noscript>
-        <img
-          src={POSTER}
-          alt="Lucentra mascot"
-          className="w-full h-full object-contain"
-        />
-      </noscript>
+      {/* Subtle play hint when paused */}
+      {!isPlaying && (
+        <div
+          className="absolute inset-0 flex items-center justify-center pointer-events-none transition-opacity duration-300"
+          style={{ opacity: 0.6 }}
+        >
+          <div
+            className="w-12 h-12 rounded-full flex items-center justify-center shadow-md"
+            style={{ background: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(4px)' }}
+          >
+            <span style={{ fontSize: '1.25rem', marginLeft: '2px', color: 'var(--brand-strong)' }}>▶</span>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
 
 /**
  * Placeholder shown in the hero area when the video file is missing.
- * This is intentionally visible — the developer must notice and fix it.
  */
 export function MascotPlaceholder({ className = '' }: { className?: string }) {
   return (
@@ -141,8 +195,7 @@ export function MascotPlaceholder({ className = '' }: { className?: string }) {
         style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: 'var(--brand-strong)' }}
       >
         Drop <strong>mascot-hero.mp4</strong> at<br />
-        <code>frontend/public/media/mascot-hero.mp4</code><br />
-        (see README for specs)
+        <code>frontend/public/media/mascot-hero.mp4</code>
       </p>
     </div>
   )
