@@ -1,295 +1,239 @@
-# Lucentra Developer Onboarding & Setup Guide 🚀
+# Lucentra — Developer Setup (Mac, No Docker)
 
-Welcome to the **Lucentra** team! This guide walks you step-by-step through setting up, running, testing, and developing the Lucentra platform on your local machine.
-
----
-
-## 📋 Table of Contents
-1. [Prerequisites](#1-prerequisites)
-2. [Quickstart with Docker (Recommended)](#2-quickstart-with-docker-recommended)
-3. [Port Allocation & Architecture](#3-port-allocation--architecture)
-4. [Setting Up API Keys & Credentials](#4-setting-up-api-keys--credentials)
-5. [Database Migrations & Management](#5-database-migrations--management)
-6. [Alternative: Local Bare-Metal Development](#6-alternative-local-bare-metal-development)
-7. [Running Tests & Linting](#7-running-tests--code-quality)
-8. [Useful Makefile Shortcuts](#8-useful-makefile-shortcuts)
-9. [Troubleshooting & FAQs](#9-troubleshooting--faqs)
+Docker is not used in this project. The backend and frontend run directly on
+your Mac using a Python 3.12 virtual environment and Node, connected to a
+hosted Neon Postgres database.
 
 ---
 
 ## 1. Prerequisites
 
-Before starting, ensure you have the following installed:
+| Tool | Required version | Check |
+|------|-----------------|-------|
+| **Python 3.12** | `3.12.x` (not 3.13+) | `python3.12 --version` |
+| **Node.js** | `20` or `22` | `node --version` |
+| **npm** | bundled with Node | `npm --version` |
+| **make** | system default | `make --version` |
 
-| Tool | Recommended Version | Verify Command |
-| :--- | :--- | :--- |
-| **Git** | `2.40+` | `git --version` |
-| **Docker Desktop** | `24.0+` (Compose v2+) | `docker compose version` |
-| **Node.js** *(Optional for local dev)* | `v20.x+` (LTS) | `node -v` |
-| **Python** *(Optional for local dev)* | `3.12+` | `python3 --version` |
+> **Why Python 3.12 explicitly?** macOS's default `python3` may resolve to 3.13
+> or later. `asyncpg` and some SQLAlchemy extensions require 3.12-compatible
+> wheels. Always create the venv with `python3.12 -m venv`.
+
+Install via Homebrew if needed:
+```bash
+brew install python@3.12 node@22
+```
 
 ---
 
-## 2. Quickstart with Docker (Recommended)
+## 2. Clone & Environment Setup
 
-Docker Compose manages PostgreSQL 15, the FastAPI backend, and the Vite frontend with hot-reloading enabled out of the box.
-
-### Step 1: Clone the Repository
 ```bash
 git clone https://github.com/sam28iksha/Lucentra.git
 cd Lucentra
 ```
 
-### Step 2: Configure Environment Files
-Copy the sample environment configurations:
+### 2a. Backend virtual environment
+
+```bash
+python3.12 -m venv backend/.venv
+source backend/.venv/bin/activate
+cd backend && pip install -e ".[dev]" && cd ..
+```
+
+### 2b. Frontend dependencies
+
+```bash
+cd frontend && npm ci && cd ..
+```
+
+### 2c. Environment files
+
 ```bash
 cp backend/.env.example backend/.env
 cp frontend/.env.example frontend/.env
 ```
-*(The default `.env` files are pre-configured to work immediately for local testing and domain simulation without needing external keys upfront).*
 
-### Step 3: Launch Containers
-```bash
-docker compose up -d --build
-```
-This builds:
-- `lucentra-postgres-1` (PostgreSQL 15 on port `5433`)
-- `lucentra-backend-1` (FastAPI on port `8001`)
-- `lucentra-frontend-1` (React + Vite on port `5174`)
+Open `backend/.env` and fill in **at minimum**:
 
-### Step 4: Apply Database Migrations
-Once the database container is healthy (takes ~5 seconds), run the initial Alembic migration:
-```bash
-docker compose exec backend alembic upgrade head
-```
+| Variable | Where to get it |
+|----------|----------------|
+| `DATABASE_URL` | Neon dashboard → your project → **Connection string → Direct** (see §3) |
+| `PAYPAL_CLIENT_ID` | [developer.paypal.com](https://developer.paypal.com/dashboard/applications/sandbox) → Sandbox app |
+| `PAYPAL_CLIENT_SECRET` | same Sandbox app |
+| `JWT_SECRET` | run `python3 -c "import secrets; print(secrets.token_hex(32))"` |
+| `AI_API_KEY` | Anthropic Console (optional for core features) |
 
-### Step 5: Verify Everything is Running
-Open your browser to:
-- 🌐 **Web Application**: [http://localhost:5174](http://localhost:5174)
-- 📖 **Interactive API Documentation (Swagger)**: [http://localhost:8001/api/docs](http://localhost:8001/api/docs)
-- 🩺 **Health Check**: [http://localhost:8001/health](http://localhost:8001/health)
+The `frontend/.env` default (`VITE_API_BASE_URL=http://localhost:8001`) works
+as-is for local dev.
 
 ---
 
-## 3. Port Allocation & Architecture
+## 3. Neon Database — Direct Connection
 
-To avoid collisions with other projects or default dev servers (like default Vite `5173`, FastAPI `8000`, or system Postgres `5432`), Lucentra is mapped to dedicated ports:
+Lucentra connects to a **Neon Postgres** instance in the cloud. No local
+Postgres is required.
 
-| Service | Host Port | Container Port | Purpose |
-| :--- | :--- | :--- | :--- |
-| **Frontend** | `5174` | `5173` | React 18 + Vite Web App |
-| **Backend API** | `8001` | `8000` | FastAPI Async REST API |
-| **PostgreSQL** | `5433` | `5432` | Persistence database |
+### 3a. Get the direct connection string
 
-> 💡 **Vite Proxy**: The frontend dev server is configured with a reverse proxy in `frontend/vite.config.ts`. Any requests to `/api/*` or `/webhooks/*` are automatically forwarded to `http://localhost:8001`.
-
----
-
-## 4. Setting Up API Keys & Credentials
-
-### A. PayPal Developer Sandbox
-To test live sync with PayPal's Sandbox APIs:
-1. Log in to the [PayPal Developer Dashboard](https://developer.paypal.com/dashboard/applications/sandbox).
-2. Under **REST API apps**, create a new App (or use the Default Application).
-3. Copy the **Client ID** and **Secret**.
-4. Open `backend/.env` and update:
-   ```env
-   PAYPAL_CLIENT_ID=your_paypal_sandbox_client_id
-   PAYPAL_CLIENT_SECRET=your_paypal_sandbox_client_secret
-   PAYPAL_BASE_URL=https://api-m.sandbox.paypal.com
+1. Open [console.neon.tech](https://console.neon.tech) → your project.
+2. Click **Connection string**, then switch the toggle to **Direct** (port 5432,
+   not the Pooled/PgBouncer string on port 6543).
+3. Select driver **asyncpg** or copy the raw string and prefix it yourself:
+   ```
+   postgresql+asyncpg://USER:PASSWORD@ep-xxx.region.aws.neon.tech/DBNAME?ssl=require
    ```
 
-### B. Anthropic Claude (For AI Dispute Rebuttal Generation)
-Lucentra uses Claude 3.5 Sonnet to synthesize bank-ready dispute evidence packages:
-1. Obtain an API key from [Anthropic Console](https://console.anthropic.com/).
-2. Add your key in `backend/.env`:
-   ```env
-   AI_PROVIDER=anthropic
-   AI_MODEL=claude-3-5-sonnet-20241022
-   AI_API_KEY=sk-ant-api03-...
-   ```
+### 3b. ⚠️ asyncpg + Neon pooler caveat
+
+Neon provides two connection endpoints:
+
+| Endpoint | Port | Mode |
+|----------|------|------|
+| **Direct** | 5432 | Full PostgreSQL session |
+| **Pooled** (PgBouncer) | 6543 | Transaction pooling |
+
+**Always use the Direct endpoint with asyncpg.**
+
+PgBouncer in transaction-pooling mode disables prepared statements and session
+state between queries. asyncpg uses both extensively. Using the pooled string
+will cause `prepared statement does not exist` errors and session leaks.
 
 ---
 
-## 5. Database Migrations & Management
+## 4. Apply Migrations & Seed
 
-All database schema changes are managed via **Alembic**.
-
-### Apply Migrations
 ```bash
-docker compose exec backend alembic upgrade head
-```
+source backend/.venv/bin/activate   # if not already active
 
-### Create a New Migration After Changing ORM Models
-1. Modify or add models in `backend/app/db/models/`.
-2. Generate an auto-migration script:
-   ```bash
-   docker compose exec backend alembic revision --autogenerate -m "describe your changes"
-   ```
-3. Inspect the newly created file in `backend/alembic/versions/`.
-4. Apply it:
-   ```bash
-   docker compose exec backend alembic upgrade head
-   ```
-
-### Rollback Last Migration
-```bash
-docker compose exec backend alembic downgrade -1
-```
-
-### Direct Database Access
-Connect to the Postgres database using `psql`:
-```bash
-# Via Docker
-docker compose exec postgres psql -U lucentra -d lucentra
-
-# Or from your host machine (if psql is installed)
-psql -h localhost -p 5433 -U lucentra -d lucentra
+make migrate    # runs: cd backend && alembic upgrade head
+make seed       # runs: cd backend && python scripts/seed.py  (idempotent)
 ```
 
 ---
 
-## 6. Alternative: Local Bare-Metal Development
+## 5. Run Locally
 
-If you prefer running services directly on your host machine without Docker:
-
-### Step 1: Start PostgreSQL
-You can either use a local PostgreSQL instance or run just Postgres via Docker:
 ```bash
-docker compose up -d postgres
+make dev        # starts backend :8001 + frontend :5174, Ctrl-C stops both
 ```
 
-### Step 2: Backend Setup
+Or run each in a separate terminal:
+
 ```bash
-cd backend
+# Terminal 1
+make backend    # uvicorn app.main:app --reload --port 8001
 
-# Create virtual environment (using uv or python venv)
-python3 -m venv .venv
-source .venv/bin/activate
-
-# Install dependencies in editable mode with dev packages
-pip install -e ".[dev]"
-
-# Ensure database URL in backend/.env points to localhost:5433
-# DATABASE_URL=postgresql+asyncpg://lucentra:lucentra@localhost:5433/lucentra
-
-# Run database migrations
-alembic upgrade head
-
-# Start FastAPI dev server
-uvicorn app.main:app --reload --port 8001
+# Terminal 2
+make frontend   # npm run dev -- --port 5174
 ```
 
-### Step 3: Frontend Setup
-In a new terminal window:
-```bash
-cd frontend
+### Local URLs
 
-# Install npm dependencies
-npm install
-
-# Start Vite dev server on port 5174
-npm run dev -- --port 5174
-```
+| Service | URL |
+|---------|-----|
+| Frontend | http://localhost:5174 |
+| Backend API | http://localhost:8001 |
+| Swagger / Docs | http://localhost:8001/api/docs |
+| Health check | http://localhost:8001/health |
 
 ---
 
-## 7. Running Tests & Code Quality
+## 6. All Makefile Targets
 
-We maintain 100% strict typing with `mypy` and linting with `ruff`. Always ensure all tests pass before submitting a pull request.
+| Command | What it does |
+|---------|-------------|
+| `make dev` | Start backend + frontend concurrently (Ctrl-C stops both) |
+| `make backend` | Backend only (`uvicorn` on :8001, hot-reload) |
+| `make frontend` | Frontend only (`vite` on :5174) |
+| `make install` | `pip install -e ".[dev]"` + `npm ci` |
+| `make migrate` | `alembic upgrade head` |
+| `make migrate-auto MSG="..."` | Generate new migration from model diff |
+| `make migrate-down` | Roll back one migration |
+| `make seed` | Load demo data (idempotent) |
+| `make test` | Run backend pytest suite |
+| `make lint` | ruff + mypy (backend) + tsc (frontend) |
+| `make format` | ruff format + prettier |
+| `make clean` | Remove `__pycache__` and `.pyc` files |
 
-### Running Backend Unit & Domain Tests
+---
+
+## 7. Testing & Linting
+
 ```bash
-# In Docker:
-docker compose exec backend pytest -v
+source backend/.venv/bin/activate
 
-# Locally:
-cd backend && pytest -v
-```
+# Run all backend tests
+make test-backend
 
-### Strict Type Checking (`mypy`)
-```bash
-# In Docker:
-docker compose exec backend mypy app/
-
-# Locally:
+# Type check
 cd backend && mypy app/
-```
 
-### Linter & Code Formatting (`ruff`)
-```bash
-# Check code style:
-docker compose exec backend ruff check .
+# Lint
+cd backend && ruff check .
 
-# Auto-fix formatting:
-docker compose exec backend ruff format .
-```
-
-### Frontend Typecheck & Build Validation
-```bash
-cd frontend
-npm run lint
-npx tsc --noEmit
-npm run build
+# Frontend type check
+cd frontend && npx tsc --noEmit
 ```
 
 ---
 
-## 8. Useful Makefile Shortcuts
-
-From the root directory, you can run:
+## 8. Database Migrations
 
 ```bash
-make dev            # Run docker compose up
-make lint           # Run both backend and frontend linters
-make test           # Run backend test suite
-make migrate        # Apply database migrations
-make clean          # Remove Python __pycache__ and .pyc files
+# Apply all pending migrations
+make migrate
+
+# Create a new auto-generated migration
+make migrate-auto MSG="add merchant_id column"
+
+# Roll back one step
+make migrate-down
+
+# Connect to Neon directly (psql)
+psql "postgresql://USER:PASSWORD@ep-xxx.region.aws.neon.tech/DBNAME?sslmode=require"
 ```
 
 ---
 
-## 9. Troubleshooting & FAQs
+## 9. Troubleshooting
 
-### Q1: `Error starting userland proxy: listen tcp4 0.0.0.0:8001: bind: address already in use`
-**Cause**: Another application is using port `8001` (or `5174`, `5433`).
-**Solution**:
-1. Check what process is listening: `lsof -i :8001`
-2. If another service must remain on that port, update the host port in `docker-compose.yml`:
-   ```yaml
-   ports:
-     - "8002:8000"   # Change left side (host port)
-   ```
-3. Update `frontend/.env` to point to the new host port.
+### `python3.12: command not found`
+Install via Homebrew: `brew install python@3.12`  
+Then symlink or use the full path: `/opt/homebrew/bin/python3.12`
 
-### Q2: `alembic: command not found` or `No 'script_location' key found`
-**Solution**: Ensure you run alembic from the `backend/` directory or inside the backend container where `alembic.ini` is located at `/app/alembic.ini`.
+### `asyncpg` build fails (no `pg_config`)
+asyncpg uses a bundled libpq — you do **not** need PostgreSQL installed locally.
+If the pip install fails, ensure Xcode Command Line Tools are present:
 ```bash
-docker compose exec backend alembic upgrade head
+xcode-select --install
 ```
 
-### Q3: How do I view live logs for debugging?
-```bash
-# All containers:
-docker compose logs -f
+### `prepared statement does not exist` error
+You are using the Neon **pooled** (PgBouncer) connection string. Switch to the
+**direct** connection string (port 5432) in `backend/.env`.
 
-# Backend only:
-docker compose logs -f backend
+### Port conflicts
+Change the ports via env vars — no config files to edit:
+- Backend: set `UVICORN_PORT=8002` or just run `uvicorn app.main:app --port 8002`
+- Frontend: set `VITE_PORT=5175` in `frontend/.env` or run `make frontend` after editing `vite.config.ts`
 
-# Frontend only:
-docker compose logs -f frontend
+### CORS errors in the browser
+Ensure `CORS_ORIGINS` in `backend/.env` includes the exact frontend origin, e.g.:
 ```
-
-### Q4: How do I stop the containers?
-```bash
-# Stop containers (preserves database data volume):
-docker compose down
-
-# Stop containers and wipe the database:
-docker compose down -v
+CORS_ORIGINS=http://localhost:5174
 ```
 
 ---
 
-## 🤝 Questions & Support
-For any questions or onboarding issues, open a GitHub Discussion or coordinate on the team Slack/Discord channel!
+## 10. Deployment (Render)
+
+The `render.yaml` file deploys:
+- **lucentra-backend** — Python web service (FastAPI via uvicorn)
+- **lucentra-frontend** — Static site (Vite build output)
+
+The database stays on **Neon** — no Render Postgres is provisioned.
+
+Set `DATABASE_URL` (Neon direct string) and all other secrets in the **Render
+dashboard** under Environment → Secret Files / Environment Variables.
+Never commit `.env` files.
