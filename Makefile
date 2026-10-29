@@ -1,14 +1,21 @@
-.PHONY: dev test lint migrate seed install
+.PHONY: dev backend frontend migrate migrate-auto migrate-down seed \
+        install lint lint-backend lint-frontend test test-backend test-e2e \
+        format clean
 
 # ── Local dev ─────────────────────────────────────────────────────────────────
+# Starts backend (uvicorn :8001) and frontend (vite :5174) concurrently.
+# Ctrl-C stops both.
 dev:
-	docker compose up
+	@trap 'kill 0' INT; \
+	(cd backend && uvicorn app.main:app --reload --port 8001) & \
+	(cd frontend && npm run dev -- --port 5174) & \
+	wait
 
-dev-backend:
+backend:
 	cd backend && uvicorn app.main:app --reload --port 8001
 
-dev-frontend:
-	cd frontend && npm run dev
+frontend:
+	cd frontend && npm run dev -- --port 5174
 
 # ── Install ───────────────────────────────────────────────────────────────────
 install:
