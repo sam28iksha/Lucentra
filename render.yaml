@@ -26,18 +26,14 @@ services:
     startCommand: cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
     envVars:
+      # DATABASE_URL: Neon direct (non-pooled) connection string.
+      # Use the postgresql+asyncpg:// form with ssl=require.
+      # Set this in the Render dashboard — never commit the real value.
+      # Example: postgresql+asyncpg://USER:PASSWORD@ep-xxx.us-east-2.aws.neon.tech/DBNAME?ssl=require
       - key: DATABASE_URL
-        fromDatabase:
-          name: lucentra-db
-          property: connectionString
+        sync: false
       # Set the following in the Render dashboard (never commit values):
       # PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_WEBHOOK_ID,
-      # AI_API_KEY, JWT_SECRET, CORS_ORIGINS, ENVIRONMENT=production,
+      # AI_API_KEY, JWT_SECRET, ENVIRONMENT=production,
+      # CORS_ORIGINS=https://lucentra-frontend.onrender.com,
       # SANDBOX_MODE=true (for demo), AG_STUDIO_LICENSE_KEY (optional)
-
-  # ── Managed PostgreSQL 15 ─────────────────────────────────────────────────────
-databases:
-  - name: lucentra-db
-    plan: free
-    databaseName: lucentra
-    user: lucentra
