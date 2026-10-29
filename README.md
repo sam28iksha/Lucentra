@@ -6,7 +6,6 @@
 [![React 18](https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.5+-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-336791?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org)
-[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com)
 [![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](LICENSE)
 
 ---
@@ -146,7 +145,6 @@ Lucentra/
 │   │   │   └── transaction_service.py
 │   │   └── main.py                # FastAPI factory & middleware setup
 │   ├── tests/                     # 26+ pytest unit & integration tests
-│   ├── Dockerfile                 # Production backend container definition
 │   └── pyproject.toml             # Python 3.12 dependencies via hatchling
 ├── frontend/                      # React 18 + TypeScript + Vite
 │   ├── src/
@@ -155,9 +153,7 @@ Lucentra/
 │   │   ├── services/              # Axios/Fetch API client hooks
 │   │   ├── App.tsx                # Client-side routing
 │   │   └── main.tsx               # Root entry point
-│   ├── Dockerfile.dev             # Vite container definition
 │   └── vite.config.ts             # Vite server config & reverse proxy
-├── docker-compose.yml             # Orchestration for Postgres, Backend, Frontend
 ├── Makefile                       # Developer shortcuts (test, lint, migrate)
 ├── SETUP.md                       # Comprehensive teammate onboarding guide
 └── CHECKLIST.md                   # Feature compliance & hackathon milestone tracking
@@ -165,24 +161,32 @@ Lucentra/
 
 ---
 
-## 🚀 Quick Start (Under 2 Minutes)
+## 🚀 Quick Start
 
-### With Docker Compose (Recommended)
+> No Docker required — runs directly on your Mac.
 
 ```bash
-# 1. Clone repository
+# 1. Clone and enter the repo
 git clone https://github.com/sam28iksha/Lucentra.git
 cd Lucentra
 
-# 2. Setup environment files
-cp backend/.env.example backend/.env
+# 2. Create a Python 3.12 virtual environment
+python3.12 -m venv backend/.venv
+source backend/.venv/bin/activate
+pip install -e ".[dev]"         # installs backend deps
+
+# 3. Copy env templates and fill in your Neon URL + secrets
+cp backend/.env.example backend/.env   # edit DATABASE_URL → Neon direct string
 cp frontend/.env.example frontend/.env
 
-# 3. Spin up all containers
-docker compose up -d --build
+# 4. Apply migrations against Neon
+make migrate
 
-# 4. Apply database migrations
-docker compose exec backend alembic upgrade head
+# 5. Load demo data (idempotent)
+make seed
+
+# 6. Start backend (port 8001) + frontend (port 5174) in one terminal
+make dev
 ```
 
 ### Access URLs
@@ -192,9 +196,8 @@ docker compose exec backend alembic upgrade head
 | **Frontend Web App** | [http://localhost:5174](http://localhost:5174) | React dashboard & portal |
 | **Backend API** | [http://localhost:8001](http://localhost:8001) | FastAPI endpoints |
 | **Interactive API Docs** | [http://localhost:8001/api/docs](http://localhost:8001/api/docs) | Swagger UI |
-| **PostgreSQL Database** | `localhost:5433` | Database: `lucentra`, User: `lucentra` |
 
-> 📖 **Full Instructions & Bare-Metal Setup**: See [SETUP.md](file:///Users/samikshakhandelwal10a27gmail.com/Lucentra/SETUP.md) for detailed configuration, PayPal Sandbox testing, and local virtual environment setups.
+> 📖 **Full setup with prerequisites, Neon config, and asyncpg caveat**: See [SETUP.md](SETUP.md).
 
 ---
 
@@ -204,13 +207,13 @@ Lucentra maintains strict production-grade software engineering standards:
 
 ```bash
 # Run backend unit tests (26 passing tests)
-docker compose exec backend pytest -v
+make test-backend
 
 # Run strict type checking (0 errors across all files)
-docker compose exec backend mypy app/
+cd backend && mypy app/
 
 # Run linter
-docker compose exec backend ruff check .
+cd backend && ruff check .
 
 # Frontend type check
 cd frontend && npm run build
