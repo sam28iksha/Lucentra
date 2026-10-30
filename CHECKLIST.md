@@ -6,7 +6,7 @@
 
 ## ✅ Completed
 
-- [x] **T1.1 Repo Skeleton & Tooling**: Configured `backend/pyproject.toml` (FastAPI, SQLAlchemy 2, Alembic, httpx, pydantic-settings, ruff, mypy, pytest), `frontend/package.json` (React 18, Vite, Tailwind, TanStack Query, Framer Motion, Lucide), `Makefile`, `render.yaml` (Docker removed — bare-metal dev via Neon Postgres).
+- [x] **T1.1 Repo Skeleton & Tooling**: Configured `backend/pyproject.toml` (FastAPI, SQLAlchemy 2, Alembic, httpx, pydantic-settings, ruff, mypy, pytest), `frontend/package.json` (React 18, Vite, Tailwind, TanStack Query, Framer Motion, Lucide), `Makefile`, `render.yaml` (Docker removed — bare-metal dev via Neon Postgres cloud DB connected and verified with live Alembic migrations).
 - [x] **T1.2 Database & ORM Models**: Created ORM models for `User`, `Transaction` (raw JSONB + composite index), `Dispute`, `ReconResult`, `AuditEvent` (append-only hash-chained), `Job`.
 - [x] **T1.3 Design System & Tokens**: Implemented `tokens.css` with Lucentra Warm palette (`--brand-orange: #FF8A33`, `--brand-cream: #FAF7F2`, `--surface-card: #FFFFFF`), typography tokens (Fraunces serif, Inter, JetBrains Mono), responsive styles.
 - [x] **T3.1 Landing Page**: Full layout implemented in `Landing.tsx` with sticky nav, two-column hero, mascot video with decorative SVG spark strokes, pill ask input, 3 feature cards, 4-step "How it works", FAQ accordion, footer disclaimer.

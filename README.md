@@ -44,7 +44,7 @@ graph TD
     end
 
     subgraph Storage ["Persistence Tier"]
-        DB[(PostgreSQL 15\nport: 5433)]
+        DB[(Neon PostgreSQL\nServerless Cloud DB\nUS East 1)]
     end
 
     subgraph External ["External Integrations"]
@@ -170,22 +170,20 @@ Lucentra/
 git clone https://github.com/sam28iksha/Lucentra.git
 cd Lucentra
 
-# 2. Create a Python 3.12 virtual environment
+# 2. Create a Python 3.12 virtual environment & install dependencies
 python3.12 -m venv backend/.venv
 source backend/.venv/bin/activate
-pip install -e ".[dev]"         # installs backend deps
+cd backend && pip install -e ".[dev]" && cd ..
+cd frontend && npm ci && cd ..
 
-# 3. Copy env templates and fill in your Neon URL + secrets
-cp backend/.env.example backend/.env   # edit DATABASE_URL → Neon direct string
+# 3. Copy env templates and configure your Neon connection string
+cp backend/.env.example backend/.env   # set DATABASE_URL (Neon direct string with ssl=require)
 cp frontend/.env.example frontend/.env
 
 # 4. Apply migrations against Neon
 make migrate
 
-# 5. Load demo data (idempotent)
-make seed
-
-# 6. Start backend (port 8001) + frontend (port 5174) in one terminal
+# 5. Start backend (port 8001) + frontend (port 5174) in one terminal
 make dev
 ```
 

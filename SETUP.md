@@ -77,12 +77,19 @@ Postgres is required.
 ### 3a. Get the direct connection string
 
 1. Open [console.neon.tech](https://console.neon.tech) → your project.
-2. Click **Connection string**, then switch the toggle to **Direct** (port 5432,
-   not the Pooled/PgBouncer string on port 6543).
-3. Select driver **asyncpg** or copy the raw string and prefix it yourself:
+2. Under **Connection Details**, select:
+   - Branch: `production` (or `main`)
+   - Database: `neondb`
+   - Mode: switch the toggle to **Direct** (port 5432, hostname without `-pooler`).
+3. Select driver **asyncpg** or format the connection string as:
+   ```env
+   DATABASE_URL=postgresql+asyncpg://neondb_owner:PASSWORD@ep-xxx.region.aws.neon.tech/neondb?ssl=require
    ```
-   postgresql+asyncpg://USER:PASSWORD@ep-xxx.region.aws.neon.tech/DBNAME?ssl=require
-   ```
+
+> ⚠️ **Important Format Notes**:
+> - Must start with `postgresql+asyncpg://` (not `postgresql://`).
+> - Parameter is `?ssl=require` (not `sslmode=require` and omit `channel_binding`).
+> - Must use direct hostname (no `-pooler` in the host).
 
 ### 3b. ⚠️ asyncpg + Neon pooler caveat
 
@@ -209,9 +216,12 @@ If the pip install fails, ensure Xcode Command Line Tools are present:
 xcode-select --install
 ```
 
+### `connect() got an unexpected keyword argument 'sslmode'`
+`asyncpg` takes `ssl=require`, not `sslmode=require` or `channel_binding=require`. Make sure your `DATABASE_URL` in `backend/.env` ends with `?ssl=require`.
+
 ### `prepared statement does not exist` error
 You are using the Neon **pooled** (PgBouncer) connection string. Switch to the
-**direct** connection string (port 5432) in `backend/.env`.
+**direct** connection string (port 5432, remove `-pooler` from hostname) in `backend/.env`.
 
 ### Port conflicts
 Change the ports via env vars — no config files to edit:
